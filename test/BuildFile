@@ -1,6 +1,6 @@
 <environment>
   <use name=SimCalorimetry/HcalSimAlgos>
-
+  <use name=CalibCalorimetry/HcalTPGAlgos>
   <bin file=HcalDigitizerTest.cpp></bin>
 </environment>
 
