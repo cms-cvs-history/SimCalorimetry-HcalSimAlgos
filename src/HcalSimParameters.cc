@@ -40,8 +40,8 @@ double HcalSimParameters::simHitToPhotoelectrons(const DetId & detId) const
   double result = CaloSimParameters::simHitToPhotoelectrons(detId);
   if(HcalDetId(detId).subdet() != HcalForward)
   { 
-    result = samplingFactor(detId) / fCtoGeV(detId) / photoelectronsToAnalog();
-  }
+    result = samplingFactor(detId) / fCtoGeV(detId) / photoelectronsToAnalog(detId);
+   }
   return result;
 }
 
@@ -69,6 +69,6 @@ double HcalSimParameters::fCtoGeV(const DetId & detId) const
 double HcalSimParameters::samplingFactor(const DetId & detId) const
 {
   HcalDetId hcalDetId(detId);
-  return theSamplingFactors[hcalDetId.ietaAbs()-theFirstRing];
+  return theSamplingFactors.at(hcalDetId.ietaAbs()-theFirstRing);
 }
 
