@@ -1,7 +1,8 @@
 <environment>
   <use name=SimCalorimetry/HcalSimAlgos>
-  <use name=CalibCalorimetry/HcalTPGAlgos>
   <use name=SimDataFormats/CrossingFrame>
   <bin file=HcalDigitizerTest.cpp></bin>
+  <bin file=writeHPDLibrary.cc></bin>
+  <bin file=readHPDLibrary.cc></bin>
 </environment>
 
