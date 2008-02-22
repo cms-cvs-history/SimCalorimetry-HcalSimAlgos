@@ -6,3 +6,11 @@
   <bin file=readHPDLibrary.cc></bin>
 </environment>
 
+<use name=root>
+<use name=FWCore/Framework>
+<use name=FWCore/ServiceRegistry>
+<use name=FWCore/Utilities>
+<use name=SimCalorimetry/HcalSimAlgos>
+<library file=HPDNoiseLibraryReaderTest.cc name=HPDNoiseLibraryReaderTest>
+<flags EDM_PLUGIN=1>
+</library>
