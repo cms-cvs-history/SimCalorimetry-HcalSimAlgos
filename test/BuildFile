@@ -2,16 +2,7 @@
   <use name=SimCalorimetry/HcalSimAlgos>
   <use name=SimDataFormats/CrossingFrame>
   <bin file=HcalDigitizerTest.cpp></bin>
-  # rpw commented out for 2_0_X release
-  #<bin file=writeHPDLibrary.cc></bin>
-  #<bin file=readHPDLibrary.cc></bin>
+  <bin file=writeHPDLibrary.cc></bin>
+  <bin file=readHPDLibrary.cc></bin>
 </environment>
 
-#<use name=root>
-#<use name=FWCore/Framework>
-#<use name=FWCore/ServiceRegistry>
-#<use name=FWCore/Utilities>
-#<use name=SimCalorimetry/HcalSimAlgos>
-#<library file=HPDNoiseLibraryReaderTest.cc name=HPDNoiseLibraryReaderTest>
-#<flags EDM_PLUGIN=1>
-#</library>
