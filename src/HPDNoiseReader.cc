@@ -2,7 +2,7 @@
 // Engine to read HPD noise events from the library
 // Project: HPD noise library
 // Author: F.Ratnikov UMd, Jan. 15, 2008
-// $Id: HPDNoiseReader.cc,v 1.1 2008/01/16 02:12:41 fedor Exp $
+// $Id: HPDNoiseReader.cc,v 1.2 2008/01/17 23:35:53 fedor Exp $
 // --------------------------------------------------------
 
 #include "SimCalorimetry/HcalSimAlgos/interface/HPDNoiseReader.h"
@@ -20,7 +20,7 @@ HPDNoiseReader::HPDNoiseReader (const std::string& fFileName) {
   mFile = new TFile (fFileName.c_str(), "READ");
   mBuffer = new HPDNoiseData ();
   HPDNoiseDataCatalog* catalog;
-  mFile->GetObject ("HPDNoiseDataCatalog;1", catalog);
+  mFile->GetObject ("catalog", catalog);
   if (catalog) {
     // initiate trees
     const std::vector<std::string> names = catalog->allNames();
@@ -75,7 +75,7 @@ unsigned long HPDNoiseReader::totalEntries (Handle fHandle) const {
 
 void HPDNoiseReader::grabEntry (Handle fHandle, unsigned long fEntry) {
   if (!valid (fHandle)) return;
-  TBranch* branch = mTrees[fHandle]->GetBranch ("HPDNoiseData");
+  TBranch* branch = mTrees[fHandle]->GetBranch (HPDNoiseData::branchName());
   branch->SetAddress (&mBuffer);
   branch->GetEntry (fEntry);
   mCurrentEntry [fHandle] = fEntry;
