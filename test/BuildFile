@@ -2,9 +2,15 @@
   <use name=SimCalorimetry/HcalSimAlgos>
   <use name=SimDataFormats/CrossingFrame>
   <bin file=HcalDigitizerTest.cpp></bin>
+<<<<<<< BuildFile
+  <bin file=writeHPDLibrary.cc></bin>
+  <bin file=readHPDLibrary.cc></bin>
+  <bin file=validateHPDLibrary.cc></bin>
+=======
   # rpw commented out for 2_0_X release
   #<bin file=writeHPDLibrary.cc></bin>
   #<bin file=readHPDLibrary.cc></bin>
+>>>>>>> 1.6
 </environment>
 
 #<use name=root>
