@@ -36,7 +36,7 @@ private:
 
   void pe2fC(CaloSamples & frame) const;
   void addPedestals(CaloSamples & frame) const;
-  void makeNoise (const HcalCalibrationWidths& width, int fFrames, double* fGauss, double* fNoise) const;
+  //void makeNoise (const HcalCalibrationWidths& width, int fFrames, double* fGauss, double* fNoise) const;
 
   const HcalDbService * theDbService;
   CLHEP::RandGaussQ * theRandGaussQ;

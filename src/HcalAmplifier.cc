@@ -55,26 +55,29 @@ void HcalAmplifier::addPedestals(CaloSamples & frame) const
   assert(theDbService != 0);
   HcalGenericDetId hcalGenDetId(frame.id());
 
-  const HcalCalibrationWidths & calibWidths =
-    theDbService->getHcalCalibrationWidths(hcalGenDetId);
-  const HcalCalibrations& calibs = theDbService->getHcalCalibrations(hcalGenDetId);
+  //const HcalCalibrationWidths & calibWidths =
+  //  theDbService->getHcalCalibrationWidths(hcalGenDetId);
+  //const HcalCalibrations& calibs = theDbService->getHcalCalibrations(hcalGenDetId);
+  const HcalPedestal* peds = theDbService->getPedestal(hcalGenDetId);
 
   double noise [32] = {0.}; //big enough
   if(addNoise_)
   {
     double gauss [32]; //big enough
     for (int i = 0; i < frame.size(); i++) gauss[i] = theRandGaussQ->fire(0., 1.);
-    makeNoise(calibWidths, frame.size(), gauss, noise);
+    const HcalPedestalWidth* pwidths = theDbService->getPedestalWidth(hcalGenDetId);
+    pwidths->makeNoise(frame.size(), gauss, noise);
   }
 
   for (int tbin = 0; tbin < frame.size(); ++tbin) {
     int capId = (theStartingCapId + tbin)%4;
-    double pedestal = calibs.pedestal(capId) + noise[tbin];
+    //double pedestal = calibs.pedestal(capId) + noise[tbin];
+    double pedestal = peds->getValue (capId);
     frame[tbin] += pedestal;
   }
 }
 
-
+/*
 void HcalAmplifier::makeNoise (const HcalCalibrationWidths& width, int fFrames, double* fGauss, double* fNoise) const {
 
   // This is a simplified noise generation scheme using only the diagonal elements
@@ -105,4 +108,4 @@ void HcalAmplifier::makeNoise (const HcalCalibrationWidths& width, int fFrames, 
     if (i < fFrames-1) fNoise [i] += fGauss[i+1]*corr;
   }
 }
-
+*/
