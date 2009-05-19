@@ -17,16 +17,20 @@ HcalSimParameters::HcalSimParameters(double simHitToPhotoelectrons, double photo
                     readoutFrameSize, binOfMaximum, doPhotostatistics, syncPhase),
   theDbService(0),
   theFirstRing(firstRing),
-  theSamplingFactors(samplingFactors)
+  theSamplingFactors(samplingFactors),
+  doTimeSmear_(true)
 {
+  defaultTimeSmearing();
 }
 
 HcalSimParameters::HcalSimParameters(const edm::ParameterSet & p)
 :  CaloSimParameters(p),
    theDbService(0),
    theFirstRing( p.getParameter<int>("firstRing") ),
-   theSamplingFactors( p.getParameter<std::vector<double> >("samplingFactors") )
+   theSamplingFactors( p.getParameter<std::vector<double> >("samplingFactors") ),
+   doTimeSmear_( p.getParameter<bool>("timeSmearing"))
 {
+  defaultTimeSmearing();
 }
 
 double HcalSimParameters::simHitToPhotoelectrons(const DetId & detId) const 
@@ -69,3 +73,48 @@ double HcalSimParameters::samplingFactor(const DetId & detId) const
   return theSamplingFactors.at(hcalDetId.ietaAbs()-theFirstRing);
 }
 
+//static const double GeV2fC = 1.0/0.145;
+static const double GeV2fC = 1.0/0.4;
+
+void HcalSimParameters::defaultTimeSmearing() {
+  // GeV->ampl (fC), time (ns)
+  theSmearSettings.push_back(std::pair<double,double>(  4.00*GeV2fC, 4.050));
+  theSmearSettings.push_back(std::pair<double,double>( 20.00*GeV2fC, 3.300));
+  theSmearSettings.push_back(std::pair<double,double>( 25.00*GeV2fC, 2.925));
+  theSmearSettings.push_back(std::pair<double,double>( 30.00*GeV2fC, 2.714));
+  theSmearSettings.push_back(std::pair<double,double>( 37.00*GeV2fC, 2.496));
+  theSmearSettings.push_back(std::pair<double,double>( 44.50*GeV2fC, 2.278));
+  theSmearSettings.push_back(std::pair<double,double>( 56.00*GeV2fC, 2.138));
+  theSmearSettings.push_back(std::pair<double,double>( 63.50*GeV2fC, 2.022));
+  theSmearSettings.push_back(std::pair<double,double>( 81.00*GeV2fC, 1.788));
+  theSmearSettings.push_back(std::pair<double,double>( 88.50*GeV2fC, 1.695));
+  theSmearSettings.push_back(std::pair<double,double>(114.50*GeV2fC, 1.716));
+  theSmearSettings.push_back(std::pair<double,double>(175.50*GeV2fC, 1.070));
+  theSmearSettings.push_back(std::pair<double,double>(350.00*GeV2fC, 1.564));
+  theSmearSettings.push_back(std::pair<double,double>(99999.00*GeV2fC, 1.564));
+}
+
+double HcalSimParameters::timeSmearRMS(double ampl) const {
+  HcalTimeSmearSettings::size_type i;
+  double smearsigma=0;
+
+  for (i=0; i<theSmearSettings.size(); i++)
+    if (theSmearSettings[i].first > ampl)
+      break;
+
+  // Smearing occurs only within the envelope definitions.
+  if (i!=0 && (i < theSmearSettings.size())) {
+    double energy1 = theSmearSettings[i-1].first;
+    double sigma1  = theSmearSettings[i-1].second;
+    double energy2 = theSmearSettings[i].first;
+    double sigma2  = theSmearSettings[i].second;
+    
+    if (energy2 != energy1)
+      smearsigma = sigma1 + ((sigma2-sigma1)*(ampl-energy1)/(energy2-energy1));
+    else
+      smearsigma = (sigma2+sigma1)/2.;    
+  }
+
+  return smearsigma;
+
+}
