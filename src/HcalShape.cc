@@ -5,7 +5,6 @@ HcalShape::HcalShape()
 : nbin_(256),
   nt_(nbin_, 0.)
 {
-   setTpeak(32.0);
    computeShape();
 }
 
@@ -14,9 +13,13 @@ HcalShape::HcalShape(const HcalShape&d):
   nbin_(d.nbin_),
   nt_(d.nt_)
 {
-  setTpeak(32.0);
 }
 
+double
+HcalShape::timeToRise() const 
+{
+   return 0. ;
+}
 
 void HcalShape::computeShape()
 {
