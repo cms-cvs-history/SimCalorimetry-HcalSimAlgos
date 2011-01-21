@@ -80,7 +80,7 @@ CaloSamples HcalSiPMHitResponse::makeSiPMSignal(const PCaloHit & inHit,
   if (theHitCorrection != 0)
     theHitCorrection->correct(hit);
 
-  DetId id(hit.id());
+  HcalDetId id(hit.id());
   const HcalSimParameters& pars = dynamic_cast<const HcalSimParameters&>(theParameterMap->simParameters(id));
   theSiPM->setNCells(pars.pixels());
 
