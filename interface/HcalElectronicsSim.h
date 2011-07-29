@@ -6,6 +6,7 @@
       digitized data frame
    */
 #include "CalibFormats/CaloObjects/interface/CaloSamples.h"
+#include "SimCalorimetry/HcalSimAlgos/src/HcalTDC.h"
 #include "CLHEP/Random/RandFlat.h"
 
 class HBHEDataFrame;
@@ -42,6 +43,7 @@ private:
 
   HcalAmplifier * theAmplifier;
   const HcalCoderFactory * theCoderFactory;
+  HcalTDC theTDC;
   CLHEP::RandFlat * theRandFlat;
 
   int theStartingCapId;

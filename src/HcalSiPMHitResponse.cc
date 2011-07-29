@@ -9,9 +9,10 @@
 #include "SimCalorimetry/CaloSimAlgos/interface/CaloSimParameters.h"
 #include "SimCalorimetry/CaloSimAlgos/interface/CaloVHitCorrection.h"
 #include "SimCalorimetry/CaloSimAlgos/interface/CaloVShape.h"
-
 #include <set>
 #include <map>
+
+//FIXME
 
 class PCaloHitCompareTimes {
 public:
@@ -22,9 +23,11 @@ public:
 };
 
 HcalSiPMHitResponse::HcalSiPMHitResponse(const CaloVSimParameterMap * parameterMap,
-					 const CaloVShape * shape) :
-  CaloHitResponse(parameterMap, shape), theSiPM(0), theRecoveryTime(250.) {
+					 const CaloVShape * shape, const CaloVShape * integratedShape) :
+  CaloHitResponse(parameterMap, shape), theIntegratedShape(integratedShape), theSiPM(0), theRecoveryTime(250.) {
   theSiPM = new HcalSiPM(14000);
+  // normalize the shape to a peak of 1, not an integral of 1
+  theShapeNormalization = 1./(*shape)(shape->timeToRise());
 }
 
 HcalSiPMHitResponse::~HcalSiPMHitResponse() {
@@ -59,9 +62,8 @@ void HcalSiPMHitResponse::run(MixCollection<PCaloHit> & hits) {
       hit = *itr;
       pixelIntegral = pixelHistory.getIntegral(hit->time());
       oldIntegral = pixelIntegral;
-      CaloSamples signal(makeSiPMSignal(*hit, pixelIntegral));
+      add( makeSiPMSignal(*hit, pixelIntegral) );
       pixelHistory.addToHistory(hit->time(), pixelIntegral-oldIntegral);
-      add(signal);
     }
   }
 }
@@ -71,6 +73,17 @@ void HcalSiPMHitResponse::setRandomEngine(CLHEP::HepRandomEngine & engine)
 {
   theSiPM->initRandomEngine(engine);
   CaloHitResponse::setRandomEngine(engine);
+}
+
+
+CaloSamples HcalSiPMHitResponse::makeBlankSignal(const DetId & detId) const {
+  const CaloSimParameters & parameters = theParameterMap->simParameters(detId);
+  int nSamples = parameters.readoutFrameSize();
+  int preciseSize = nSamples * theTDCParameters.nbins();
+  CaloSamples result(detId, nSamples, preciseSize);
+  result.setPresamples(parameters.binOfMaximum()-1);
+  result.setPrecise(0, theTDCParameters.deltaT());
+  return result;
 }
 
 
@@ -91,21 +104,31 @@ CaloSamples HcalSiPMHitResponse::makeSiPMSignal(const PCaloHit & inHit,
   signal = double(pixels);
 
   CaloSamples result(makeBlankSignal(id));
-
   if(pixels > 0)
   {
     double jitter = hit.time() - timeOfFlight(id);
 
     const double tzero = pars.timePhase() - jitter -
       BUNCHSPACE*(pars.binOfMaximum() - thePhaseShift_);
-    double binTime = tzero;
 
-    for (int bin = 0; bin < result.size(); bin++) {
-      result[bin] += (*theShape)(binTime)*signal;
+    double binTime = tzero;
+    int nbins =  result.size();
+    for (int bin = 0; bin < nbins; ++bin) {
+      result[bin] += (*theIntegratedShape)(binTime)*signal;
+      // fill precise
+      double preciseTime = binTime;
+      int preciseBin = bin * theTDCParameters.nbins();
+      for(int preciseBXBin = 0; preciseBXBin < theTDCParameters.nbins(); ++preciseBXBin)
+      {
+        result.preciseAtMod(preciseBin) = (*theShape)(preciseTime) * signal * theShapeNormalization;
+        ++preciseBin;
+        preciseTime += theTDCParameters.deltaT();
+      }        
       binTime += BUNCHSPACE;
     }
   }
 
   return result;
 }
+
 

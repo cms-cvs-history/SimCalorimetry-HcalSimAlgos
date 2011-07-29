@@ -62,6 +62,7 @@ void HcalElectronicsSim::analogToDigital(CaloSamples & lf, ZDCDataFrame & result
 void HcalElectronicsSim::analogToDigital(CaloSamples & lf, 
 					 HcalUpgradeDataFrame & result) {
   convert<HcalUpgradeDataFrame>(lf, result);
+  theTDC.timing(lf, result);
 }
 
 void HcalElectronicsSim::newEvent() {
