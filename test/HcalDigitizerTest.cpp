@@ -157,7 +157,7 @@ int main() {
   CaloHitResponse hoResponse(&parameterMap, &hcalShapeIntegrator);
   CaloHitResponse hfResponse(&parameterMap, &hfShapeIntegrator);
   CaloHitResponse zdcResponse(&parameterMap, &zdcShapeIntegrator);
-  HcalSiPMHitResponse hoSiPMResponse(&siPMParameterMap, &sipmShapeIntegrator);
+  HcalSiPMHitResponse hoSiPMResponse(&siPMParameterMap, &sipmShape, &sipmShapeIntegrator);
 
   HcalHitCorrection hitCorrection(&parameterMap);
   hbheResponse.setHitCorrection(&hitCorrection);
