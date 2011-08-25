@@ -1,11 +1,22 @@
 #include "SimCalorimetry/HcalSimAlgos/src/HcalTDC.h"
+#include "CalibFormats/HcalObjects/interface/HcalCalibrations.h"
+#include "CalibFormats/HcalObjects/interface/HcalDbService.h"
 
-
-HcalTDC::HcalTDC() {}
-
-void HcalTDC::timing(const CaloSamples & lf, HcalUpgradeDataFrame & digi)
+HcalTDC::HcalTDC() :
+  theTDCParameters(),
+  theDbService(0),
+  theRandGaussQ(0)
 {
-  float TDC_Threshold = 100.;
+}
+
+HcalTDC::~HcalTDC()
+{
+  delete theRandGaussQ;
+}
+
+void HcalTDC::timing(const CaloSamples & lf, HcalUpgradeDataFrame & digi) const
+{
+  float TDC_Threshold = getThreshold(digi.id());
   bool alreadyOn = false;
   int tdcBins = theTDCParameters.nbins();
   // start with a loop over 10 samples
@@ -50,5 +61,21 @@ void HcalTDC::timing(const CaloSamples & lf, HcalUpgradeDataFrame & digi)
       digi.setSample(relativeSample, digi.adc(ibin), packedTDC, true);
     }
   } // loop over bunch crossing bins
+}
+
+double HcalTDC::getThreshold(const HcalGenericDetId & detId) const {
+  // subtract off pedestal and noise once
+  double pedestal = theDbService->getHcalCalibrations(detId).pedestal(0);
+  double pedestalWidth = theDbService->getHcalCalibrationWidths(detId).pedestal(0);
+  return 100. - theRandGaussQ->shoot(pedestal,  pedestalWidth);
+}
+
+void HcalTDC::setRandomEngine(CLHEP::HepRandomEngine & engine)
+{
+  theRandGaussQ = new CLHEP::RandGaussQ(engine);
+}
+
+void HcalTDC::setDbService(const HcalDbService * service) {
+  theDbService = service;
 }
 
