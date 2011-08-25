@@ -30,8 +30,14 @@ void HcalElectronicsSim::setRandomEngine(CLHEP::HepRandomEngine & engine)
 {
   theRandFlat = new CLHEP::RandFlat(engine);
   theAmplifier->setRandomEngine(engine);
+  theTDC.setRandomEngine(engine);
 }
 
+void HcalElectronicsSim::setDbService(const HcalDbService * service)
+{
+  theAmplifier->setDbService(service);
+  theTDC.setDbService(service);
+}
 
 template<class Digi> 
 void HcalElectronicsSim::convert(CaloSamples & frame, Digi & result) {

@@ -25,6 +25,7 @@ public:
   ~HcalElectronicsSim();
 
   void setRandomEngine(CLHEP::HepRandomEngine & engine);
+  void setDbService(const HcalDbService * service);
 
   void analogToDigital(CaloSamples & linearFrame, HBHEDataFrame & result);
   void analogToDigital(CaloSamples & linearFrame, HODataFrame & result);
