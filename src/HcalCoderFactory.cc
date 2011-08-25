@@ -10,6 +10,10 @@ HcalCoderFactory::HcalCoderFactory(CoderType coderType)
 {
 }
 
+void HcalCoderFactory::setDbService(const HcalDbService * service) 
+{
+  theDbService = service;
+}
 
 std::auto_ptr<HcalCoder> HcalCoderFactory::coder(const DetId & id) const {
   HcalCoder * result = 0;
