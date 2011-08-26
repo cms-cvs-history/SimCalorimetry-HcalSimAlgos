@@ -55,10 +55,7 @@ void HcalTDC::timing(const CaloSamples & lf, HcalUpgradeDataFrame & digi) const
         }
       }
       int packedTDC = TDC_RisingEdge + tdcBins * TDC_FallingEdge;
-      // for whatever reason, the UpgradeDigi setter takes relative samples
-      // don't worry if it's negative; presamples will be added back in.
-      int relativeSample = ibin - digi.presamples();
-      digi.setSample(relativeSample, digi.adc(ibin), packedTDC, true);
+      digi.setSample(ibin, digi.adc(ibin), packedTDC, true);
     }
   } // loop over bunch crossing bins
 }
