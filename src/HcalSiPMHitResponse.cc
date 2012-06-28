@@ -11,7 +11,8 @@
 #include "SimCalorimetry/CaloSimAlgos/interface/CaloVShape.h"
 #include <set>
 #include <map>
-
+#include <vector>
+#include <stdlib.h>
 //FIXME
 
 class PCaloHitCompareTimes {
@@ -22,6 +23,16 @@ public:
   }
 };
 
+int SortDuo(const void *vpptr1, const void *vpptr2) {
+  const PCaloHit *p1=*(const PCaloHit **)vpptr1;
+  const PCaloHit *p2=*(const PCaloHit **)vpptr2;
+
+  if (p1->id()!=p2->id()) return p1->id()-p2->id();
+  if ( p1->time() < p2->time() )
+    return -1;
+  return 1;
+  
+}
 HcalSiPMHitResponse::HcalSiPMHitResponse(const CaloVSimParameterMap * parameterMap,
 					 const CaloVShape * shape, const CaloVShape * integratedShape) :
   CaloHitResponse(parameterMap, shape), theIntegratedShape(integratedShape), theSiPM(0), theRecoveryTime(250.) {
@@ -36,38 +47,32 @@ HcalSiPMHitResponse::~HcalSiPMHitResponse() {
 }
 
 void HcalSiPMHitResponse::run(MixCollection<PCaloHit> & hits) {
-
-  typedef std::multiset <const PCaloHit *, PCaloHitCompareTimes> SortedHitSet;
-
-  std::map< DetId, SortedHitSet > sortedhits;
+  std::vector<const PCaloHit*> hitsSorted;
+  hitsSorted.reserve(hits.size());
   for (MixCollection<PCaloHit>::MixItr hitItr = hits.begin();
        hitItr != hits.end(); ++hitItr) {
     if (!((hitItr.bunch() < theMinBunch) || (hitItr.bunch() > theMaxBunch)) &&
 	!(isnan(hitItr->time())) &&
 	((theHitFilter == 0) || (theHitFilter->accepts(*hitItr)))) {
-      DetId id(hitItr->id());
-      if (sortedhits.find(id)==sortedhits.end())
-	sortedhits.insert(std::pair<DetId, SortedHitSet>(id, SortedHitSet()));
-      sortedhits[id].insert(&(*hitItr));
+      hitsSorted.push_back(&(*hitItr));
     }
   }
+
+  qsort(&(hitsSorted[0]),hitsSorted.size(),sizeof(PCaloHit*),&SortDuo);
+
   int pixelIntegral, oldIntegral;
   HcalSiPMRecovery pixelHistory(theRecoveryTime);
-  const PCaloHit * hit;
-  for (std::map<DetId, SortedHitSet>::iterator i = sortedhits.begin(); 
-       i!=sortedhits.end(); ++i) {
-    pixelHistory.clearHistory();
-    for (SortedHitSet::iterator itr = i->second.begin(); 
-	 itr != i->second.end(); ++itr) {
-      hit = *itr;
-      pixelIntegral = pixelHistory.getIntegral(hit->time());
-      oldIntegral = pixelIntegral;
-      add( makeSiPMSignal(*hit, pixelIntegral) );
-      pixelHistory.addToHistory(hit->time(), pixelIntegral-oldIntegral);
-    }
+  DetId oldID(0);
+  for ( unsigned int i=0; i<hitsSorted.size(); i++ ){
+    const PCaloHit *hit=hitsSorted[i];
+    if ( hit->id() != oldID) 
+      pixelHistory.clearHistory();
+    pixelIntegral = pixelHistory.getIntegral(hit->time());
+    oldIntegral = pixelIntegral;
+    add( makeSiPMSignal(*hit, pixelIntegral) );
+    pixelHistory.addToHistory(hit->time(), pixelIntegral-oldIntegral);
   }
 }
-
 
 void HcalSiPMHitResponse::setRandomEngine(CLHEP::HepRandomEngine & engine)
 {
@@ -81,6 +86,7 @@ CaloSamples HcalSiPMHitResponse::makeBlankSignal(const DetId & detId) const {
   int nSamples = parameters.readoutFrameSize();
   int preciseSize = nSamples * theTDCParameters.nbins();
   CaloSamples result(detId, nSamples, preciseSize);
+  //std::cout << "calo samples " << nSamples << " " << preciseSize << std::endl;
   result.setPresamples(parameters.binOfMaximum()-1);
   result.setPrecise(0, theTDCParameters.deltaT());
   return result;
@@ -103,7 +109,8 @@ CaloSamples HcalSiPMHitResponse::makeSiPMSignal(const PCaloHit & inHit,
   integral += pixels;
   signal = double(pixels);
 
-  CaloSamples result(makeBlankSignal(id));
+  CaloSamples result=makeBlankSignal(id);
+  int nSet=0;
   if(pixels > 0)
   {
     double jitter = hit.time() - timeOfFlight(id);
@@ -113,6 +120,7 @@ CaloSamples HcalSiPMHitResponse::makeSiPMSignal(const PCaloHit & inHit,
 
     double binTime = tzero;
     int nbins =  result.size();
+    result.resetPrecise(); // now I will actually use this
     for (int bin = 0; bin < nbins; ++bin) {
       result[bin] += (*theIntegratedShape)(binTime)*signal;
       // fill precise
@@ -121,11 +129,15 @@ CaloSamples HcalSiPMHitResponse::makeSiPMSignal(const PCaloHit & inHit,
       for(int preciseBXBin = 0; preciseBXBin < theTDCParameters.nbins(); ++preciseBXBin)
       {
         result.preciseAtMod(preciseBin) = (*theShape)(preciseTime) * signal * theShapeNormalization;
+	//std::cout << "("<<preciseBin << ","<<result.preciseAtMod(preciseBin)<<") ";
+	nSet+=1;
         ++preciseBin;
         preciseTime += theTDCParameters.deltaT();
       }        
+      //std::cout << std::endl;
       binTime += BUNCHSPACE;
     }
+    //std::cout << "nSet=" << nSet << std::endl;
   }
 
   return result;

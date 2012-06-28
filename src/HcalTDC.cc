@@ -20,6 +20,8 @@ void HcalTDC::timing(const CaloSamples & lf, HcalUpgradeDataFrame & digi) const
   bool alreadyOn = false;
   int tdcBins = theTDCParameters.nbins();
   // start with a loop over 10 samples
+  bool hasTDCValues=true;
+  if (lf.preciseSize()==0 ) hasTDCValues=false;
   for(int ibin = 0; ibin < lf.size(); ++ibin) {
     /*
     If in a given 25ns bunch/time sample, the pulse is above TDC_Thresh  
@@ -34,29 +36,31 @@ void HcalTDC::timing(const CaloSamples & lf, HcalUpgradeDataFrame & digi) const
     int TDC_FallingEdge = alreadyOn ? tdcBins-1 : 0;
     int preciseBegin = ibin * tdcBins;
     int preciseEnd = preciseBegin + tdcBins;
-    for(int i = preciseBegin; i < preciseEnd; ++i)
-    { 
-      if(alreadyOn)
-      {
-        if(lf.preciseAt(i) < TDC_Threshold)
-        {
-          alreadyOn = false;
-          TDC_FallingEdge = i-preciseBegin;
-        }
-      }
-      else 
-      {
-        if(lf.preciseAt(i) > TDC_Threshold)
-        {
-          alreadyOn = true;
-          TDC_RisingEdge = i-preciseBegin;
-          // the flag for hasn't gone low yet
-          TDC_FallingEdge = tdcBins-1;
-        }
-      }
-      int packedTDC = TDC_RisingEdge + tdcBins * TDC_FallingEdge;
-      digi.setSample(ibin, digi.adc(ibin), packedTDC, true);
+    if ( hasTDCValues) {
+      for(int i = preciseBegin; i < preciseEnd; ++i)
+	{ 
+	  if(alreadyOn)
+	    {
+	      if(lf.preciseAt(i) < TDC_Threshold)
+		{
+		  alreadyOn = false;
+		  TDC_FallingEdge = i-preciseBegin;
+		}
+	    }
+	  else 
+	    {
+	      if(lf.preciseAt(i) > TDC_Threshold)
+		{
+		  alreadyOn = true;
+		  TDC_RisingEdge = i-preciseBegin;
+		  // the flag for hasn't gone low yet
+		  TDC_FallingEdge = tdcBins-1;
+		}
+	    }
+	}
     }
+    int packedTDC = TDC_RisingEdge + tdcBins * TDC_FallingEdge;
+    digi.setSample(ibin, digi.adc(ibin), packedTDC, true);
   } // loop over bunch crossing bins
 }
 
