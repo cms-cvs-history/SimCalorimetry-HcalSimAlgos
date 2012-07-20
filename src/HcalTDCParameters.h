@@ -4,7 +4,7 @@
 class HcalTDCParameters
 {
 public:
-  HcalTDCParameters() : nbits_(5) {}
+  HcalTDCParameters() : nbits_(6) {}
 
   int nbits() const {return nbits_;}
   int nbins() const {return 1 << nbits_;}
